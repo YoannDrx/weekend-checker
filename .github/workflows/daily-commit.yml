@@ -6,6 +6,10 @@ on:
     - cron: '0 12 * * *'
   workflow_dispatch: # Permet d'exécuter manuellement
 
+# Donner les permissions d'écriture au GITHUB_TOKEN
+permissions:
+  contents: write
+
 jobs:
   daily-commit:
     runs-on: ubuntu-latest
