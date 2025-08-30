@@ -5,8 +5,12 @@ import { isWeekend, getNextFriday, getWeekendEnd, getTimeRemaining, formatTimeRe
 
 export default function WeekendWidget() {
   const [currentTime, setCurrentTime] = useState<Date>(new Date());
+  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
+    // Marquer qu'on est côté client pour éviter l'erreur d'hydratation
+    setIsClient(true);
+    
     const interval = setInterval(() => {
       setCurrentTime(new Date());
     }, 1000);
@@ -75,9 +79,9 @@ export default function WeekendWidget() {
               className="text-2xl md:text-3xl font-mono bg-black/20 rounded-xl py-4 px-6 backdrop-blur-sm"
               role="timer"
               aria-live="polite"
-              aria-label={`${message} ${countdown}`}
+              aria-label={`${message} ${isClient ? countdown : 'Chargement...'}`}
             >
-              {countdown}
+              {isClient ? countdown : 'Chargement...'}
             </div>
           </div>
           
