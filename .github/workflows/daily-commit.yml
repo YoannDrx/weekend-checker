@@ -1,0 +1,37 @@
+name: Daily Commit
+
+on:
+  schedule:
+    # Exécution quotidienne à 12:00 UTC (14:00 CET en hiver / 13:00 CET en été)
+    - cron: '0 12 * * *'
+  workflow_dispatch: # Permet d'exécuter manuellement
+
+jobs:
+  daily-commit:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        # Token avec permissions de push
+        token: ${{ secrets.GITHUB_TOKEN }}
+        
+    - name: Setup Git config
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        
+    - name: Create daily log entry
+      run: |
+        echo "$(date '+%Y-%m-%d %H:%M:%S UTC') - Daily commit automatique" >> daily-log.txt
+        
+    - name: Commit changes
+      run: |
+        git add daily-log.txt
+        if git diff --staged --quiet; then
+          echo "Aucun changement à committer"
+        else
+          git commit -m "📅 Commit automatique quotidien - $(date '+%Y-%m-%d')"
+          git push
+        fi
