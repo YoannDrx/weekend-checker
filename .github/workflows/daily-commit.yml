@@ -1,9 +1,14 @@
-name: Daily Commit
+name: Daily Commits
 
 on:
   schedule:
-    # Exécution quotidienne à 12:00 UTC (14:00 CET en hiver / 13:00 CET en été)
-    - cron: '0 12 * * *'
+    # Exécutions multiples par jour à différents moments
+    - cron: '0 6 * * *'   # 06:00 UTC
+    - cron: '0 9 * * *'   # 09:00 UTC  
+    - cron: '0 12 * * *'  # 12:00 UTC
+    - cron: '0 15 * * *'  # 15:00 UTC
+    - cron: '0 18 * * *'  # 18:00 UTC
+    - cron: '0 21 * * *'  # 21:00 UTC
   workflow_dispatch: # Permet d'exécuter manuellement
 
 # Donner les permissions d'écriture au GITHUB_TOKEN
@@ -11,7 +16,7 @@ permissions:
   contents: write
 
 jobs:
-  daily-commit:
+  random-commit:
     runs-on: ubuntu-latest
     
     steps:
@@ -26,31 +31,60 @@ jobs:
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
         
-    - name: Create daily log entry
+    - name: Random commit decision
       run: |
-        echo "$(date '+%Y-%m-%d %H:%M:%S UTC') - Daily commit" >> daily-log.txt
+        # Probabilité de commit : 50% à chaque exécution
+        # Cela donne en moyenne 3 commits par jour (6 exécutions × 50%)
+        SHOULD_COMMIT=$((RANDOM % 2))
+        
+        if [ "$SHOULD_COMMIT" -eq 1 ]; then
+          echo "COMMIT=true" >> $GITHUB_ENV
+          echo "✅ Commit décidé pour cette exécution"
+        else
+          echo "COMMIT=false" >> $GITHUB_ENV
+          echo "❌ Pas de commit cette fois"
+        fi
+        
+    - name: Create activity entry
+      if: env.COMMIT == 'true'
+      run: |
+        # Messages variés pour plus de naturel
+        MESSAGES=(
+          "Vérification du statut week-end"
+          "Mise à jour des logs d'activité"
+          "Synchronisation quotidienne"
+          "Maintenance du projet"
+          "Check automatique"
+          "Activité de routine"
+          "Mise à jour du tracker"
+          "Heartbeat du système"
+        )
+        
+        # Sélectionner un message aléatoire
+        MESSAGE_INDEX=$((RANDOM % ${#MESSAGES[@]}))
+        SELECTED_MESSAGE="${MESSAGES[$MESSAGE_INDEX]}"
+        
+        echo "$(date '+%Y-%m-%d %H:%M:%S UTC') - $SELECTED_MESSAGE" >> daily-log.txt
         
     - name: Commit changes
+      if: env.COMMIT == 'true'
       run: |
         git add daily-log.txt
-        if git diff --staged --quiet; then
-          echo "Aucun changement à committer"
+        
+        # Déterminer si c'est le week-end
+        DAY_OF_WEEK=$(date '+%u')  # 1=Lundi, 5=Vendredi, 6=Samedi, 7=Dimanche
+        HOUR=$(date '+%H')
+        
+        if [ "$DAY_OF_WEEK" -eq 5 ] && [ "$HOUR" -ge 12 ]; then
+          # Vendredi après 12h
+          WEEKEND_STATUS="🎉 OUI"
+        elif [ "$DAY_OF_WEEK" -eq 6 ] || [ "$DAY_OF_WEEK" -eq 7 ]; then
+          # Samedi ou dimanche
+          WEEKEND_STATUS="🎉 OUI"
         else
-          # Déterminer si c'est le week-end
-          DAY_OF_WEEK=$(date '+%u')  # 1=Lundi, 5=Vendredi, 6=Samedi, 7=Dimanche
-          HOUR=$(date '+%H')
-          
-          if [ "$DAY_OF_WEEK" -eq 5 ] && [ "$HOUR" -ge 12 ]; then
-            # Vendredi après 12h
-            WEEKEND_STATUS="🎉 OUI"
-          elif [ "$DAY_OF_WEEK" -eq 6 ] || [ "$DAY_OF_WEEK" -eq 7 ]; then
-            # Samedi ou dimanche
-            WEEKEND_STATUS="🎉 OUI"
-          else
-            # Autres cas
-            WEEKEND_STATUS="⏰ PAS ENCORE"
-          fi
-          
-          git commit -m "📅 $(date '+%Y-%m-%d') - C'est bientôt le week-end ? $WEEKEND_STATUS"
-          git push
+          # Autres cas
+          WEEKEND_STATUS="⏰ PAS ENCORE"
         fi
+        
+        git commit -m "📅 $(date '+%Y-%m-%d %H:%M') - C'est bientôt le week-end ? $WEEKEND_STATUS"
+        git push
