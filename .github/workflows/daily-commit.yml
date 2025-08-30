@@ -28,7 +28,7 @@ jobs:
         
     - name: Create daily log entry
       run: |
-        echo "$(date '+%Y-%m-%d %H:%M:%S UTC') - Daily commit automatique" >> daily-log.txt
+        echo "$(date '+%Y-%m-%d %H:%M:%S UTC') - Daily commit" >> daily-log.txt
         
     - name: Commit changes
       run: |
@@ -36,6 +36,21 @@ jobs:
         if git diff --staged --quiet; then
           echo "Aucun changement à committer"
         else
-          git commit -m "📅 Commit automatique quotidien - $(date '+%Y-%m-%d')"
+          # Déterminer si c'est le week-end
+          DAY_OF_WEEK=$(date '+%u')  # 1=Lundi, 5=Vendredi, 6=Samedi, 7=Dimanche
+          HOUR=$(date '+%H')
+          
+          if [ "$DAY_OF_WEEK" -eq 5 ] && [ "$HOUR" -ge 12 ]; then
+            # Vendredi après 12h
+            WEEKEND_STATUS="🎉 OUI"
+          elif [ "$DAY_OF_WEEK" -eq 6 ] || [ "$DAY_OF_WEEK" -eq 7 ]; then
+            # Samedi ou dimanche
+            WEEKEND_STATUS="🎉 OUI"
+          else
+            # Autres cas
+            WEEKEND_STATUS="⏰ PAS ENCORE"
+          fi
+          
+          git commit -m "📅 $(date '+%Y-%m-%d') - C'est bientôt le week-end ? $WEEKEND_STATUS"
           git push
         fi
