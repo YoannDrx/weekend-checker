@@ -28,8 +28,8 @@ jobs:
         
     - name: Setup Git config
       run: |
-        git config --local user.email "action@github.com"
-        git config --local user.name "GitHub Action"
+        git config --local user.email "121291279+YoannDrx@users.noreply.github.com"
+        git config --local user.name "Yoann Andrieux"
         
     - name: Random commit decision
       run: |
