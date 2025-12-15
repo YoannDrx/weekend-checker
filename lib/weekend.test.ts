@@ -162,9 +162,9 @@ describe('Weekend Logic', () => {
     it('should calculate remaining hours and minutes correctly', () => {
       const from = new Date('2024-01-01T10:15:30');
       const to = new Date('2024-01-01T13:45:15');
-      
+
       const remaining = getTimeRemaining(from, to);
-      
+
       expect(remaining.days).toBe(0);
       expect(remaining.hours).toBe(3);
       expect(remaining.minutes).toBe(29);
