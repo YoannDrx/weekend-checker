@@ -2,12 +2,12 @@
 
 ---
 
-## ⚡ AUTO-START mgrep (à faire automatiquement)
+## ⚡ AUTO-START grepai (à faire automatiquement)
 
 **Dès que tu commences à travailler sur ce projet, lance cette commande en background :**
 
 ```bash
-mgrep watch --store "weekend-checker" &
+~/.local/bin/grepai watch &
 ```
 
 > Lance cette commande UNE SEULE FOIS au début de la session. Ne la relance pas à chaque question.
@@ -19,17 +19,16 @@ Ce fichier fournit des instructions à Claude Code pour ce projet.
 
 ---
 
-## mgrep - Assistant de recherche de code
+## grepai - Recherche sémantique de code (100% local et gratuit)
 
-**mgrep est l'outil principal pour explorer ce codebase.** Il retourne une réponse en langage naturel + les sources pertinentes.
+**grepai est l'outil principal pour explorer ce codebase.** Il utilise des embeddings locaux (Ollama) pour la recherche sémantique.
 
-### Store : `weekend-checker`
 
 ### Lancer le watch (à faire à chaque ouverture du projet)
 
 ```bash
 cd ~/Projets/weekend-checker
-mgrep watch --store "weekend-checker"
+~/.local/bin/grepai watch
 ```
 
 > Garde ce terminal ouvert : il surveille les modifications en temps réel.
@@ -37,16 +36,13 @@ mgrep watch --store "weekend-checker"
 ### Commande de recherche
 
 ```bash
-mgrep "ta question en langage naturel" --store "weekend-checker" -a -m <nombre>
+~/.local/bin/grepai search "ta question en langage naturel"
 ```
 
 ### Paramètres
 
 | Paramètre | Description |
 |-----------|-------------|
-| `--store "weekend-checker"` | **Obligatoire** - le store indexé du projet |
-| `-a` | Active la réponse en langage naturel |
-| `-m <n>` | Nombre de résultats (minimum 10) |
 
 ### Ajuster `-m` selon la complexité
 
@@ -58,8 +54,8 @@ mgrep "ta question en langage naturel" --store "weekend-checker" -a -m <nombre>
 
 ### Règles
 
-- **OBLIGATOIRE** : Utilise mgrep pour TOUTE recherche de code. N'utilise JAMAIS grep, Grep tool, ou Glob.
-- **Langage naturel** : Parle à mgrep comme à un collègue
+- **OBLIGATOIRE** : Utilise grepai pour TOUTE recherche de code. N'utilise JAMAIS grep, Grep tool, ou Glob.
+- **Langage naturel** : Parle à grepai comme à un collègue
   - ❌ `"weekend date check"` (mots-clés)
   - ✅ `"Comment est déterminé si on est le weekend ?"` (question naturelle)
 
@@ -69,7 +65,7 @@ mgrep "ta question en langage naturel" --store "weekend-checker" -a -m <nombre>
 
 **Les subagents n'héritent PAS des instructions de ce fichier.**
 
-Quand tu lances un subagent, copie-colle cette section mgrep dans le prompt du subagent.
+Quand tu lances un subagent, copie-colle cette section grepai dans le prompt du subagent.
 
 ---
 
@@ -106,4 +102,4 @@ pnpm test:run     # Tests unitaires - une fois
 
 **Les subagents n'héritent PAS des instructions de ce fichier.**
 
-Quand tu lances un subagent, copie-colle les instructions mgrep dans son prompt.
+Quand tu lances un subagent, copie-colle les instructions grepai dans son prompt.
