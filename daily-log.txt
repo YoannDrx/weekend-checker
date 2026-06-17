@@ -857,3 +857,4 @@
 2026-06-16 19:18:53 UTC - Synchronisation quotidienne
 2026-06-16 21:49:43 UTC - Mise à jour du tracker
 2026-06-17 07:38:33 UTC - Synchronisation quotidienne
+2026-06-17 16:18:07 UTC - Check automatique
