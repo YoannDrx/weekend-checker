@@ -2,6 +2,60 @@ import { describe, it, expect } from 'vitest';
 import { isWeekend, getNextFriday, getWeekendEnd, getTimeRemaining, formatTimeRemaining } from './weekend';
 
 describe('Weekend Logic', () => {
+  describe('fuseaux horaires et changements d’heure', () => {
+    it('évalue le même instant selon le fuseau local', () => {
+      const instant = new Date('2024-01-05T11:30:00Z');
+
+      expect(isWeekend(instant, 'Europe/Paris')).toBe(true);
+      expect(isWeekend(instant, 'America/New_York')).toBe(false);
+    });
+
+    it('respecte précisément vendredi 12 h et lundi 00 h à Paris', () => {
+      expect(
+        isWeekend(new Date('2024-01-05T10:59:59Z'), 'Europe/Paris'),
+      ).toBe(false);
+      expect(
+        isWeekend(new Date('2024-01-05T11:00:00Z'), 'Europe/Paris'),
+      ).toBe(true);
+      expect(
+        isWeekend(new Date('2024-01-07T23:00:00Z'), 'Europe/Paris'),
+      ).toBe(false);
+    });
+
+    it('calcule un week-end de 59 heures au passage à l’heure d’été', () => {
+      const start = new Date('2024-03-29T11:00:00Z');
+      const end = getWeekendEnd(start, 'Europe/Paris');
+
+      expect(end.toISOString()).toBe('2024-03-31T22:00:00.000Z');
+      expect(getTimeRemaining(start, end)).toEqual({
+        days: 2,
+        hours: 11,
+        minutes: 0,
+        seconds: 0,
+      });
+    });
+
+    it('calcule un week-end de 61 heures au passage à l’heure d’hiver', () => {
+      const start = new Date('2024-10-25T10:00:00Z');
+      const end = getWeekendEnd(start, 'Europe/Paris');
+
+      expect(end.toISOString()).toBe('2024-10-27T23:00:00.000Z');
+      expect(getTimeRemaining(start, end)).toEqual({
+        days: 2,
+        hours: 13,
+        minutes: 0,
+        seconds: 0,
+      });
+    });
+
+    it('conserve vendredi midi comme heure cible après un changement DST', () => {
+      const from = new Date('2024-03-28T23:30:00Z');
+      expect(getNextFriday(from, 'Europe/Paris').toISOString()).toBe(
+        '2024-03-29T11:00:00.000Z',
+      );
+    });
+  });
+
   describe('isWeekend', () => {
     it('should return false for vendredi 11:59:59', () => {
       const date = new Date('2024-01-05T11:59:59'); // Vendredi 5 janvier 2024, 11:59:59

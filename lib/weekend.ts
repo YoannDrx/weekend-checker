@@ -1,92 +1,152 @@
-export interface TimeRemaining {
+export type TimeRemaining = {
   days: number;
   hours: number;
   minutes: number;
   seconds: number;
+};
+
+type ZonedDateParts = {
+  year: number;
+  month: number;
+  day: number;
+  weekday: number;
+  hours: number;
+  minutes: number;
+  seconds: number;
+};
+
+const formatterCache = new Map<string, Intl.DateTimeFormat>();
+
+const getFormatter = (timeZone: string) => {
+  const cached = formatterCache.get(timeZone);
+  if (cached) return cached;
+
+  const formatter = new Intl.DateTimeFormat("en-CA", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hourCycle: "h23",
+  });
+  formatterCache.set(timeZone, formatter);
+  return formatter;
+};
+
+const getDefaultTimeZone = () =>
+  Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
+
+const getZonedParts = (date: Date, timeZone: string): ZonedDateParts => {
+  const values = Object.fromEntries(
+    getFormatter(timeZone)
+      .formatToParts(date)
+      .filter((part) => part.type !== "literal")
+      .map((part) => [part.type, Number(part.value)]),
+  );
+  const year = values.year;
+  const month = values.month;
+  const day = values.day;
+
+  return {
+    year,
+    month,
+    day,
+    weekday: new Date(Date.UTC(year, month - 1, day)).getUTCDay(),
+    hours: values.hour,
+    minutes: values.minute,
+    seconds: values.second,
+  };
+};
+
+const getTimeZoneOffset = (date: Date, timeZone: string) => {
+  const parts = getZonedParts(date, timeZone);
+  const representedAsUtc = Date.UTC(
+    parts.year,
+    parts.month - 1,
+    parts.day,
+    parts.hours,
+    parts.minutes,
+    parts.seconds,
+  );
+  return representedAsUtc - Math.floor(date.getTime() / 1000) * 1000;
+};
+
+const zonedDateTimeToDate = (
+  values: Omit<ZonedDateParts, "weekday">,
+  timeZone: string,
+) => {
+  const utcGuess = Date.UTC(
+    values.year,
+    values.month - 1,
+    values.day,
+    values.hours,
+    values.minutes,
+    values.seconds,
+  );
+  let result = new Date(utcGuess - getTimeZoneOffset(new Date(utcGuess), timeZone));
+  const correctedOffset = getTimeZoneOffset(result, timeZone);
+  result = new Date(utcGuess - correctedOffset);
+  return result;
+};
+
+const addCalendarDays = (
+  parts: ZonedDateParts,
+  days: number,
+  hours: number,
+  timeZone: string,
+) => {
+  const calendarDate = new Date(
+    Date.UTC(parts.year, parts.month - 1, parts.day + days),
+  );
+  return zonedDateTimeToDate(
+    {
+      year: calendarDate.getUTCFullYear(),
+      month: calendarDate.getUTCMonth() + 1,
+      day: calendarDate.getUTCDate(),
+      hours,
+      minutes: 0,
+      seconds: 0,
+    },
+    timeZone,
+  );
+};
+
+export function isWeekend(
+  date: Date,
+  timeZone = getDefaultTimeZone(),
+): boolean {
+  const parts = getZonedParts(date, timeZone);
+  return (
+    parts.weekday === 6 ||
+    parts.weekday === 0 ||
+    (parts.weekday === 5 && parts.hours >= 12)
+  );
 }
 
-export function isWeekend(date: Date): boolean {
-  const day = date.getDay(); // 0 = Dimanche, 5 = Vendredi, 1 = Lundi
-  const hours = date.getHours();
-  const minutes = date.getMinutes();
-  const seconds = date.getSeconds();
+export function getNextFriday(
+  from: Date,
+  timeZone = getDefaultTimeZone(),
+): Date {
+  const parts = getZonedParts(from, timeZone);
+  let daysToAdd = (5 - parts.weekday + 7) % 7;
 
-  // Vendredi à partir de 12:00:00
-  if (day === 5 && (hours > 12 || (hours === 12 && minutes >= 0 && seconds >= 0))) {
-    return true;
+  if (daysToAdd === 0 && parts.hours >= 12) {
+    daysToAdd = 7;
   }
-  
-  // Samedi et dimanche (toute la journée)
-  if (day === 6 || day === 0) {
-    return true;
-  }
-  
-  return false;
+
+  return addCalendarDays(parts, daysToAdd, 12, timeZone);
 }
 
-export function getNextFriday(from: Date): Date {
-  const nextFriday = new Date(from);
-  
-  // Calculer les jours jusqu'au prochain vendredi
-  const currentDay = from.getDay();
-  let daysToAdd: number;
-  
-  if (currentDay < 5) {
-    // On est avant vendredi dans la semaine courante
-    daysToAdd = 5 - currentDay;
-  } else if (currentDay === 5) {
-    // On est vendredi
-    const hours = from.getHours();
-    if (hours < 12) {
-      // Avant 12:00, on prend aujourd'hui
-      daysToAdd = 0;
-    } else {
-      // Après 12:00, on prend le vendredi suivant
-      daysToAdd = 7;
-    }
-  } else {
-    // On est samedi (6) ou dimanche (0)
-    daysToAdd = currentDay === 6 ? 6 : 5; // Samedi -> +6, Dimanche -> +5
-  }
-  
-  nextFriday.setDate(nextFriday.getDate() + daysToAdd);
-  nextFriday.setHours(12, 0, 0, 0);
-  
-  return nextFriday;
-}
-
-export function getWeekendEnd(from: Date): Date {
-  const weekendEnd = new Date(from);
-  
-  // Trouver le lundi suivant à 00:00:00
-  const currentDay = from.getDay();
-  let daysToAdd: number;
-  
-  if (currentDay === 0) {
-    // Dimanche -> lundi suivant
-    daysToAdd = 1;
-  } else if (currentDay >= 1 && currentDay <= 4) {
-    // Lundi à jeudi -> lundi suivant
-    daysToAdd = 8 - currentDay;
-  } else if (currentDay === 5) {
-    // Vendredi
-    const hours = from.getHours();
-    if (hours >= 12) {
-      // Après 12:00 vendredi -> lundi suivant
-      daysToAdd = 3;
-    } else {
-      // Avant 12:00 vendredi -> lundi suivant
-      daysToAdd = 10;
-    }
-  } else {
-    // Samedi
-    daysToAdd = 2;
-  }
-  
-  weekendEnd.setDate(weekendEnd.getDate() + daysToAdd);
-  weekendEnd.setHours(0, 0, 0, 0);
-  
-  return weekendEnd;
+export function getWeekendEnd(
+  from: Date,
+  timeZone = getDefaultTimeZone(),
+): Date {
+  const parts = getZonedParts(from, timeZone);
+  let daysToAdd = (1 - parts.weekday + 7) % 7;
+  if (daysToAdd === 0) daysToAdd = 7;
+  return addCalendarDays(parts, daysToAdd, 0, timeZone);
 }
 
 export function getTimeRemaining(from: Date, to: Date): TimeRemaining {
@@ -96,24 +156,21 @@ export function getTimeRemaining(from: Date, to: Date): TimeRemaining {
     return { days: 0, hours: 0, minutes: 0, seconds: 0 };
   }
 
-  const days = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
-  const hours = Math.floor((diffInMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-  const minutes = Math.floor((diffInMs % (1000 * 60 * 60)) / (1000 * 60));
-  const seconds = Math.floor((diffInMs % (1000 * 60)) / 1000);
+  const days = Math.floor(diffInMs / 86_400_000);
+  const hours = Math.floor((diffInMs % 86_400_000) / 3_600_000);
+  const minutes = Math.floor((diffInMs % 3_600_000) / 60_000);
+  const seconds = Math.floor((diffInMs % 60_000) / 1000);
 
   return { days, hours, minutes, seconds };
 }
 
 export function formatTimeRemaining(time: TimeRemaining): string {
-  const { days, hours, minutes, seconds } = time;
-  
-  const parts: string[] = [];
-  
-  if (days > 0) {
-    parts.push(`${days.toString().padStart(2, '0')} jour${days > 1 ? 's' : ''}`);
-  }
-  
-  parts.push(`${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`);
-  
-  return parts.join(' ');
+  const dayPart =
+    time.days > 0
+      ? `${time.days.toString().padStart(2, "0")} jour${time.days > 1 ? "s" : ""} `
+      : "";
+  const clockPart = [time.hours, time.minutes, time.seconds]
+    .map((value) => value.toString().padStart(2, "0"))
+    .join(":");
+  return `${dayPart}${clockPart}`;
 }

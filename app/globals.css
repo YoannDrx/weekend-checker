@@ -1,26 +1,167 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --canvas: #0d1117;
+  --surface: #161b22;
+  --surface-elevated: #1f2630;
+  --text: #f0f6fc;
+  --text-muted: #8b949e;
+  --border: #30363d;
+  --green: #2da44e;
+  --gold: #f2cc60;
+  color-scheme: dark;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+* {
+  box-sizing: border-box;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  background: var(--canvas);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  margin: 0;
+  background:
+    radial-gradient(circle at 50% 0%, rgb(45 164 78 / 12%), transparent 38rem),
+    var(--canvas);
+  color: var(--text);
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+}
+
+.weekend-shell {
+  display: grid;
+  min-height: 100svh;
+  place-items: center;
+  padding: 1.25rem;
+}
+
+.status-card {
+  width: min(100%, 44rem);
+  padding: clamp(1.5rem, 5vw, 3rem);
+  border: 1px solid var(--border);
+  border-radius: 1.25rem;
+  background: rgb(22 27 34 / 94%);
+  box-shadow: 0 24px 80px rgb(0 0 0 / 35%);
+}
+
+.eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  color: var(--text-muted);
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.status-dot {
+  width: 0.65rem;
+  height: 0.65rem;
+  border-radius: 999px;
+  background: var(--gold);
+  box-shadow: 0 0 0 4px rgb(242 204 96 / 12%);
+}
+
+.status-dot.is-on {
+  background: var(--green);
+  box-shadow: 0 0 0 4px rgb(45 164 78 / 16%);
+}
+
+h1 {
+  margin: 2rem 0 0;
+  color: var(--text-muted);
+  font-size: clamp(1.1rem, 3vw, 1.35rem);
+  font-weight: 500;
+}
+
+.answer {
+  margin: 0.4rem 0 2rem;
+  color: var(--gold);
+  font-family: var(--font-geist-mono), monospace;
+  font-size: clamp(2.8rem, 11vw, 6.5rem);
+  font-weight: 800;
+  letter-spacing: -0.07em;
+  line-height: 0.95;
+}
+
+.answer.is-weekend {
+  color: #3fb950;
+}
+
+.countdown-panel {
+  padding: 1.25rem;
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  background: var(--canvas);
+}
+
+.countdown-panel > p:first-child {
+  margin: 0 0 0.5rem;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
+
+.countdown {
+  margin: 0;
+  font-family: var(--font-geist-mono), monospace;
+  font-size: clamp(1.5rem, 6vw, 2.5rem);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.04em;
+}
+
+.context-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  margin: 1rem 0;
+}
+
+.context-grid div,
+.rule-card {
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  background: var(--surface-elevated);
+}
+
+dt,
+.rule-card span {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+}
+
+dd {
+  margin: 0.4rem 0 0;
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 0.875rem;
+}
+
+.rule-card strong {
+  display: block;
+  margin-top: 0.5rem;
+  font-family: var(--font-geist-mono), monospace;
+}
+
+.rule-card p {
+  margin: 0.4rem 0 0;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
+
+@media (max-width: 36rem) {
+  .context-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
 }
